@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Learning Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1> AI Learning & Skill Assistant</h1>
+        <form method="POST">
+            <input type="text" name="user_input" placeholder="What do you want to learn?" required>
+            <button type="submit">Get Suggestion</button>
+        </form>
+
+        {% if suggestion %}
+        <div class="card">
+            <h2>Suggestion</h2>
+            <p>{{ suggestion }}</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
