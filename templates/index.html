@@ -2,23 +2,569 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Learning Assistant</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Teaching Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 2.2rem;
+        }
+
+        .subtitle {
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .voice-btn {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            border: 1px solid #ddd;
+            width: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .voice-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .voice-btn.listening {
+            background-color: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        .response-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            position: relative;
+        }
+
+        .response-container h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .response-text {
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .audio-btn {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .audio-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(79, 195, 247, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .error {
+            color: var(--danger-color);
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: rgba(220, 53, 69, 0.1);
+            border-radius: 4px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .input-container {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1> AI Learning & Skill Assistant</h1>
-        <form method="POST">
-            <input type="text" name="user_input" placeholder="What do you want to learn?" required>
-            <button type="submit">Get Suggestion</button>
-        </form>
+        <header>
+            <h1>AI Teaching Assistant</h1>
+            <p class="subtitle">Learn anything with interactive voice and text support</p>
+        </header>
 
-        {% if suggestion %}
-        <div class="card">
-            <h2>Suggestion</h2>
-            <p>{{ suggestion }}</p>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Ask me anything about the subject you're learning..." autocomplete="off">
+            <button id="voice-btn" class="voice-btn" title="Voice Input">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button id="submit-btn">
+                <i class="fas fa-paper-plane"></i> Send
+            </button>
         </div>
-        {% endif %}
+
+        <div id="status" class="status" style="display: none;">
+            <div class="loading"></div>
+            <span id="status-text">Processing your request...</span>
+        </div>
+
+        <div id="error-message" class="error" style="display: none;"></div>
+
+        <div id="response-container" class="response-container" style="display: none;">
+            <h2>Teaching Assistant Response</h2>
+            <div id="response-text" class="response-text"></div>
+            <div class="audio-controls">
+                <button id="speak-btn" class="audio-btn" title="Read Aloud">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <button id="copy-btn" class="audio-btn" title="Copy to Clipboard">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button id="download-audio-btn" class="audio-btn" title="Download Audio">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <p>AI Teaching Assistant &copy; 2023 | Powered by advanced AI learning models</p>
+        </footer>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const userInput = document.getElementById('user-input');
+            const submitBtn = document.getElementById('submit-btn');
+            const voiceBtn = document.getElementById('voice-btn');
+            const responseContainer = document.getElementById('response-container');
+            const responseText = document.getElementById('response-text');
+            const statusElement = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            const errorElement = document.getElementById('error-message');
+            const speakBtn = document.getElementById('speak-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const downloadAudioBtn = document.getElementById('download-audio-btn');
+
+            // Speech Recognition setup
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            let recognition;
+            let isListening = false;
+            let speechSynthesis = window.speechSynthesis;
+            let currentUtterance = null;
+            let audioContext;
+            let audioBuffer;
+
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = function() {
+                    isListening = true;
+                    voiceBtn.classList.add('listening');
+                    statusText.textContent = "Listening... Speak now";
+                    statusElement.style.display = 'flex';
+                };
+
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value = transcript;
+                    isListening = false;
+                    voiceBtn.classList.remove('listening');
+                    submitQuery(transcript);
+                };
+
+                recognition.onerror = function(event) {
+                    isListening = false;
+                    voiceBtn.classList.remove('listening');
+                    statusElement.style.display = 'none';
+                    showError('Voice recognition error: ' + event.error);
+                };
+
+                recognition.onend = function() {
+                    if (isListening) {
+                        recognition.start(); // Restart if still listening
+                    } else {
+                        voiceBtn.classList.remove('listening');
+                    }
+                };
+            } else {
+                voiceBtn.disabled = true;
+                voiceBtn.title = "Voice recognition not supported in your browser";
+            }
+
+            // Event Listeners
+            submitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const query = userInput.value.trim();
+                if (query) {
+                    submitQuery(query);
+                } else {
+                    showError('Please enter your question or topic');
+                }
+            });
+
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = userInput.value.trim();
+                    if (query) {
+                        submitQuery(query);
+                    } else {
+                        showError('Please enter your question or topic');
+                    }
+                }
+            });
+
+            voiceBtn.addEventListener('click', function() {
+                if (!isListening) {
+                    if (SpeechRecognition) {
+                        try {
+                            recognition.start();
+                        } catch (error) {
+                            showError('Error starting voice recognition: ' + error.message);
+                        }
+                    }
+                } else {
+                    isListening = false;
+                    recognition.stop();
+                }
+            });
+
+            speakBtn.addEventListener('click', function() {
+                if (currentUtterance && speechSynthesis.paused) {
+                    speechSynthesis.resume();
+                    speakBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                } else if (currentUtterance) {
+                    speechSynthesis.pause();
+                    speakBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                } else {
+                    readResponse();
+                }
+            });
+
+            copyBtn.addEventListener('click', function() {
+                navigator.clipboard.writeText(responseText.textContent)
+                    .then(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        showError('Failed to copy text: ' + err);
+                    });
+            });
+
+            downloadAudioBtn.addEventListener('click', function() {
+                if (audioBuffer) {
+                    downloadAudio(audioBuffer);
+                } else {
+                    showError('No audio available to download');
+                }
+            });
+
+            // Functions
+            function submitQuery(query) {
+                // Clear previous state
+                responseContainer.style.display = 'none';
+                errorElement.style.display = 'none';
+                statusText.textContent = "Processing your request...";
+                statusElement.style.display = 'flex';
+                
+                // Simulate API call (replace with actual fetch to your backend)
+                simulateApiCall(query)
+                    .then(response => {
+                        displayResponse(response);
+                    })
+                    .catch(error => {
+                        showError('Error getting response: ' + error.message);
+                    });
+            }
+
+            function simulateApiCall(query) {
+                return new Promise((resolve) => {
+                    // Simulate network delay
+                    setTimeout(() => {
+                        // This is a mock response - replace with actual API call
+                        const mockResponses = {
+                            "hello": "Hello! I'm your AI teaching assistant. How can I help you learn today?",
+                            "what is photosynthesis": "Photosynthesis is the process by which green plants, algae, and some bacteria convert sunlight, carbon dioxide, and water into glucose and oxygen. It occurs in the chloroplasts of plant cells and is essential for life on Earth as it produces oxygen and forms the basis of the food chain.",
+                            "explain quantum physics": "Quantum physics is the branch of physics that studies the behavior of matter and energy at the smallest scales - typically atomic and subatomic levels. It introduces concepts like wave-particle duality, quantum superposition, and quantum entanglement that differ significantly from classical physics. Some key principles include:\n\n1. Particles can behave as both waves and particles\n2. Quantum systems exist in superpositions until measured\n3. Measurements affect the system being observed\n\nQuantum physics has led to technologies like semiconductors, lasers, and quantum computing."
+                        };
+                        
+                        const lowerQuery = query.toLowerCase();
+                        let response = mockResponses[lowerQuery] || 
+                            `I'm your AI teaching assistant. You asked about "${query}". In a real implementation, this would connect to an AI API to generate a detailed, educational response tailored to your learning needs. The response would include explanations, examples, and possibly follow-up questions to enhance your understanding.`;
+                        
+                        resolve(response);
+                    }, 1500);
+                });
+            }
+
+            function displayResponse(text) {
+                statusElement.style.display = 'none';
+                responseText.textContent = text;
+                responseContainer.style.display = 'block';
+                
+                // Initialize audio context when first needed
+                if (!audioContext && window.AudioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            function readResponse() {
+                if (speechSynthesis.speaking) {
+                    speechSynthesis.cancel();
+                }
+                
+                const text = responseText.textContent;
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                
+                // Set some properties for the utterance
+                currentUtterance.rate = 0.9;
+                currentUtterance.pitch = 1;
+                currentUtterance.volume = 1;
+                
+                // Speak the utterance
+                speechSynthesis.speak(currentUtterance);
+                speakBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                
+                // Generate audio buffer for download
+                if (audioContext) {
+                    synthesizeSpeech(text).then(buffer => {
+                        audioBuffer = buffer;
+                    }).catch(error => {
+                        console.error('Audio synthesis error:', error);
+                    });
+                }
+            }
+
+            function synthesizeSpeech(text) {
+                // In a real implementation, this would call a speech synthesis API
+                // This is a placeholder that returns a silent audio buffer
+                return new Promise((resolve) => {
+                    const duration = text.length * 0.05; // Estimate duration based on text length
+                    const sampleRate = audioContext.sampleRate;
+                    const frameCount = Math.round(duration * sampleRate);
+                    
+                    const buffer = audioContext.createBuffer(1, frameCount, sampleRate);
+                    const data = buffer.getChannelData(0);
+                    
+                    // Fill with silence (real implementation would generate speech)
+                    for (let i = 0; i < frameCount; i++) {
+                        data[i] = 0;
+                    }
+                    
+                    resolve(buffer);
+                });
+            }
+
+            function downloadAudio(buffer) {
+                // Convert audio buffer to WAV and download
+                const blob = bufferToWav(buffer);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'ai-response.wav';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            }
+
+            function bufferToWav(buffer) {
+                // Simple WAV encoder (in real implementation, use a proper library)
+                const numChannels = buffer.numberOfChannels;
+                const sampleRate = buffer.sampleRate;
+                const bitsPerSample = 16;
+                const byteRate = sampleRate * numChannels * bitsPerSample / 8;
+                const blockAlign = numChannels * bitsPerSample / 8;
+                const dataSize = buffer.length * numChannels * 2;
+                
+                const bufferLength = 44 + dataSize;
+                const arrayBuffer = new ArrayBuffer(bufferLength);
+                const view = new DataView(arrayBuffer);
+                
+                // Write WAV header
+                writeString(view, 0, 'RIFF');
+                view.setUint32(4, 36 + dataSize, true);
+                writeString(view, 8, 'WAVE');
+                writeString(view, 12, 'fmt ');
+                view.setUint32(16, 16, true); // Subchunk1Size
+                view.setUint16(20, 1, true); // PCM format
+                view.setUint16(22, numChannels, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, byteRate, true);
+                view.setUint16(32, blockAlign, true);
+                view.setUint16(34, bitsPerSample, true);
+                writeString(view, 36, 'data');
+                view.setUint32(40, dataSize, true);
+                
+                // Write PCM data
+                let offset = 44;
+                for (let i = 0; i < buffer.length; i++) {
+                    for (let channel = 0; channel < numChannels; channel++) {
+                        const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+                        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                        offset += 2;
+                    }
+                }
+                
+                return new Blob([view], { type: 'audio/wav' });
+            }
+
+            function writeString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+
+            function showError(message) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                statusElement.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
